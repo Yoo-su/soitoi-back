@@ -11,6 +11,9 @@ export class Chat {
   @Column({ type: 'varchar', length: 50 })
   nickname: string; // 익명 사용자 닉네임
 
+  @Column({ type: 'varchar', length: 7 })
+  color: string; // 익명 사용자 닉네임
+
   @Column({ type: 'text' })
   message: string; // 채팅 내용
 
