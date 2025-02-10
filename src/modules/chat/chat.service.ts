@@ -11,13 +11,16 @@ export class ChatService {
     private chatRepository: Repository<Chat>,
   ) {}
 
-  async create(createChatDto: CreateChatDto): Promise<Chat> {
+  async createChat(createChatDto: CreateChatDto): Promise<Chat> {
     const chat = this.chatRepository.create(createChatDto);
     return await this.chatRepository.save(chat);
   }
 
-  async findAllChats(): Promise<Chat[]> {
-    return await this.chatRepository.find({ order: { created_at: 'DESC' } });
+  async getAllChats(roomID: string): Promise<Chat[]> {
+    return await this.chatRepository.find({
+      where: { room_id: roomID },
+      order: { created_at: 'ASC' },
+    });
   }
 
   async findOne(id: number): Promise<Chat | null> {

@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { Chat } from './entities/chat.entity';
 
@@ -7,7 +7,7 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Get('all')
-  getAllChats(): Promise<Chat[]> {
-    return this.chatService.findAllChats();
+  getAllChats(@Query('roomID') roomID: string): Promise<Chat[]> {
+    return this.chatService.getAllChats(roomID);
   }
 }
