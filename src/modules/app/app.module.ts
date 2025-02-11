@@ -7,6 +7,7 @@ import { ChatModule } from '../chat/chat.module';
 import { Chat } from '../chat/entities/chat.entity';
 import { RoomModule } from '../room/room.module';
 import { Room } from '../room/entities/room.entity';
+import { WorkModule } from '../work/work.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { Room } from '../room/entities/room.entity';
     }),
     RoomModule,
     ChatModule,
+    WorkModule,
   ],
   controllers: [],
   providers: [],

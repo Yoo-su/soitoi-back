@@ -15,11 +15,10 @@ export class ChatGateway {
 
   @SubscribeMessage('chat-created')
   async create(@MessageBody() createChatDto: CreateChatDto, @ConnectedSocket() client: Socket) {
-    const { nickname } = createChatDto;
     const addedChat = await this.chatService.createChat(createChatDto);
     if (addedChat) {
-      this.typingUsers.delete(nickname);
-      client.broadcast.emit('chat-updates', {
+      this.typingUsers.delete(client.id);
+      this.server.emit('chat-updates', {
         typingUsers: Array.from(this.typingUsers.values()),
         newChat: addedChat,
       });
@@ -44,12 +43,26 @@ export class ChatGateway {
   @SubscribeMessage('typing-chat')
   handleTypingUser(@MessageBody() data: { user: RandomUser; isTyping: boolean }, @ConnectedSocket() client: Socket) {
     const { user, isTyping } = data;
-
     if (isTyping) {
-      this.typingUsers.set(user.nickname, user);
+      this.typingUsers.set(client.id, user);
     } else {
-      this.typingUsers.delete(user.nickname);
+      this.typingUsers.delete(client.id);
     }
     client.broadcast.emit('typing-users', Array.from(this.typingUsers.values()));
+  }
+
+  // ✅ 사용자가 연결되면 실행행
+  handleConnection(client: Socket) {
+    const { user } = client.handshake.auth;
+    console.log('connected user info:', user, 'clientID:', client.id);
+  }
+
+  // ✅ 사용자가 페이지를 닫거나 네트워크가 끊어지면 자동으로 실행
+  handleDisconnect(client: Socket) {
+    if (this.typingUsers.has(client.id)) {
+      this.typingUsers.delete(client.id);
+      // 모든 클라이언트에 업데이트된 typingUsers 목록 전송
+      this.server.emit('typing-users', Array.from(this.typingUsers.values()));
+    }
   }
 }

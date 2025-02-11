@@ -14,7 +14,7 @@ export class WorkGateway {
 
   @SubscribeMessage('findAllWork')
   findAll() {
-    return this.workService.findAll();
+    return;
   }
 
   @SubscribeMessage('findOneWork')
@@ -24,7 +24,7 @@ export class WorkGateway {
 
   @SubscribeMessage('updateWork')
   update(@MessageBody() updateWorkDto: UpdateWorkDto) {
-    return this.workService.update(updateWorkDto.id, updateWorkDto);
+    return;
   }
 
   @SubscribeMessage('removeWork')

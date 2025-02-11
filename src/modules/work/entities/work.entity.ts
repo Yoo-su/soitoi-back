@@ -1,13 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-  JoinColumn,
-} from 'typeorm';
-import { User } from 'src/modules/user/entities';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('work')
 export class Work {
@@ -23,13 +14,12 @@ export class Work {
   @Column({ type: 'enum', enum: ['planned', 'in_progress', 'done'], default: 'planned' })
   status: 'planned' | 'in_progress' | 'done';
 
-  @ManyToOne(() => User, (user) => user.works, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'created_by', referencedColumnName: 'email' })
-  created_by: User;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  created_by: string | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ default: () => 'CURRENT_TIMESTAMP(6)' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ default: () => 'CURRENT_TIMESTAMP(6)', onUpdate: 'CURRENT_TIMESTAMP(6)' })
   updated_at: Date;
 }

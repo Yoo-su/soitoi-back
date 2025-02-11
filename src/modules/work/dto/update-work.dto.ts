@@ -1,6 +1,9 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateWorkDto } from './create-work.dto';
+import { IsEnum, IsInt } from 'class-validator';
 
-export class UpdateWorkDto extends PartialType(CreateWorkDto) {
+export class UpdateWorkDto {
+  @IsInt()
   id: number;
+
+  @IsEnum(['planned', 'in_progress', 'done'])
+  status: 'planned' | 'in_progress' | 'done';
 }
