@@ -2,7 +2,7 @@ import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, Conne
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
-import { RandomUser } from './types/random-user.type';
+import { RandomUser } from 'src/shared/types';
 
 @WebSocketGateway({ namespace: 'socket/chat', cors: { origin: '*' } })
 export class ChatGateway {
@@ -54,7 +54,7 @@ export class ChatGateway {
   // ✅ 사용자가 연결되면 실행행
   handleConnection(client: Socket) {
     const { user } = client.handshake.auth;
-    console.log('connected user info:', user, 'clientID:', client.id);
+    console.log('new chat socket user:', user, 'clientID:', client.id);
   }
 
   // ✅ 사용자가 페이지를 닫거나 네트워크가 끊어지면 자동으로 실행

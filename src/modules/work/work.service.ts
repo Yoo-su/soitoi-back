@@ -26,8 +26,9 @@ export class WorkService {
     return `This action returns a #${id} work`;
   }
 
-  updateWork(id: number, updateWorkDto: UpdateWorkDto) {
-    return `This action updates a #${id} work`;
+  updateWorkStatus(updateWorkDto: UpdateWorkDto) {
+    const { workID, status } = updateWorkDto;
+    return this.workRepository.update(workID, { status });
   }
 
   remove(id: number) {

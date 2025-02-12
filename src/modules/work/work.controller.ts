@@ -13,6 +13,6 @@ export class WorkController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateWorkDto: UpdateWorkDto) {
-    return this.workService.updateWork(+id, updateWorkDto);
+    return this.workService.updateWorkStatus(updateWorkDto);
   }
 }

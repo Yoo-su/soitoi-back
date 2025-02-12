@@ -1,41 +1,62 @@
-import { WebSocketGateway, SubscribeMessage, MessageBody } from '@nestjs/websockets';
+import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer, ConnectedSocket } from '@nestjs/websockets';
 import { WorkService } from './work.service';
-import { CreateWorkDto } from './dto/create-work.dto';
-import { UpdateWorkDto } from './dto/update-work.dto';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
+import { RandomUser } from 'src/shared/types';
+import { DraggingInfo } from './types';
+import { DRAGGING_INFOS, PARTICIPANTS, WORK_DRAG_END, WORK_DRAG_START, WORK_STATUS_UPDATE } from './constants';
 
-@WebSocketGateway({ namespace: 'events' })
+@WebSocketGateway({ namespace: 'socket/work-board', cors: { origin: '*' } })
 export class WorkGateway {
+  @WebSocketServer()
+  server: Server;
+
   constructor(private readonly workService: WorkService) {}
+  private participants = new Map<string, RandomUser>();
+  private draggingInfos = new Map<string, DraggingInfo>();
 
-  @SubscribeMessage('createWork')
-  create(@MessageBody() createWorkDto: CreateWorkDto) {
-    return this.workService.create(createWorkDto);
+  @SubscribeMessage(WORK_DRAG_START)
+  handleDragStart(@MessageBody() info: DraggingInfo, @ConnectedSocket() client: Socket) {
+    this.draggingInfos.set(client.id, info);
+    client.broadcast.emit(DRAGGING_INFOS, Array.from(this.draggingInfos.values()));
   }
 
-  @SubscribeMessage('findAllWork')
-  findAll() {
-    return;
-  }
+  @SubscribeMessage(WORK_DRAG_END)
+  async handleDragEnd(@MessageBody() info: DraggingInfo, @ConnectedSocket() client: Socket) {
+    const { user, workID, status } = info;
+    const draggingInfo = this.draggingInfos.get(client.id);
 
-  @SubscribeMessage('findOneWork')
-  findOne(@MessageBody() id: number) {
-    return this.workService.findOne(id);
-  }
+    //상태가 변경되었으면 db 업데이트
+    if (draggingInfo?.status !== status) {
+      await this.workService.updateWorkStatus({ workID: workID, status: status });
+      this.server.emit(WORK_STATUS_UPDATE, {
+        workID: workID,
+        status: status,
+      });
+    }
+    this.draggingInfos.delete(client.id);
 
-  @SubscribeMessage('updateWork')
-  update(@MessageBody() updateWorkDto: UpdateWorkDto) {
-    return;
-  }
-
-  @SubscribeMessage('removeWork')
-  remove(@MessageBody() id: number) {
-    return this.workService.remove(id);
+    client.broadcast.emit(DRAGGING_INFOS, Array.from(this.draggingInfos.values()));
   }
 
   // ✅ 사용자가 연결되면 실행
   handleConnection(client: Socket) {
     const { user } = client.handshake.auth;
-    console.log('connected user info:', user, 'clientID:', client.id);
+    this.participants.set(client.id, user);
+    this.server.emit(PARTICIPANTS, Array.from(this.participants.values()));
+    this.server.emit(DRAGGING_INFOS, Array.from(this.draggingInfos.values()));
+  }
+
+  // ✅ 사용자가 페이지를 닫거나 네트워크가 끊어지면 자동으로 실행
+  handleDisconnect(client: Socket) {
+    if (this.participants.has(client.id)) {
+      this.participants.delete(client.id);
+      // 모든 클라이언트에 업데이트된 typingUsers 목록 전송
+      this.server.emit(PARTICIPANTS, Array.from(this.participants.values()));
+    }
+    if (this.draggingInfos.has(client.id)) {
+      this.draggingInfos.delete(client.id);
+      // 모든 클라이언트에 업데이트된 typingUsers 목록 전송
+      this.server.emit(DRAGGING_INFOS, Array.from(this.draggingInfos.values()));
+    }
   }
 }
