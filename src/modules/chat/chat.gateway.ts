@@ -51,10 +51,11 @@ export class ChatGateway {
     client.broadcast.emit('typing-users', Array.from(this.typingUsers.values()));
   }
 
-  // ✅ 사용자가 연결되면 실행행
+  // ✅ 사용자가 연결되면 실행
   handleConnection(client: Socket) {
     const { user } = client.handshake.auth;
     console.log('new chat socket user:', user, 'clientID:', client.id);
+    client.emit('typing-users', Array.from(this.typingUsers.values()));
   }
 
   // ✅ 사용자가 페이지를 닫거나 네트워크가 끊어지면 자동으로 실행
