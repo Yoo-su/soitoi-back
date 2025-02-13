@@ -17,7 +17,7 @@ export class WorkGateway {
   @SubscribeMessage(WORK_DRAG_START)
   handleDragStart(@MessageBody() info: DraggingInfo, @ConnectedSocket() client: Socket) {
     this.draggingInfos.set(client.id, info);
-    client.broadcast.emit(DRAGGING_INFOS, Array.from(this.draggingInfos.values()));
+    this.server.emit(DRAGGING_INFOS, Array.from(this.draggingInfos.values()));
   }
 
   @SubscribeMessage(WORK_DRAG_END)
@@ -35,7 +35,7 @@ export class WorkGateway {
     }
     this.draggingInfos.delete(client.id);
 
-    client.broadcast.emit(DRAGGING_INFOS, Array.from(this.draggingInfos.values()));
+    this.server.emit(DRAGGING_INFOS, Array.from(this.draggingInfos.values()));
   }
 
   // ✅ 사용자가 연결되면 실행
@@ -43,19 +43,17 @@ export class WorkGateway {
     const { user } = client.handshake.auth;
     this.participants.set(client.id, user);
     this.server.emit(PARTICIPANTS, Array.from(this.participants.values()));
-    this.server.emit(DRAGGING_INFOS, Array.from(this.draggingInfos.values()));
+    client.emit(DRAGGING_INFOS, Array.from(this.draggingInfos.values()));
   }
 
   // ✅ 사용자가 페이지를 닫거나 네트워크가 끊어지면 자동으로 실행
   handleDisconnect(client: Socket) {
     if (this.participants.has(client.id)) {
       this.participants.delete(client.id);
-      // 모든 클라이언트에 업데이트된 typingUsers 목록 전송
       this.server.emit(PARTICIPANTS, Array.from(this.participants.values()));
     }
     if (this.draggingInfos.has(client.id)) {
       this.draggingInfos.delete(client.id);
-      // 모든 클라이언트에 업데이트된 typingUsers 목록 전송
       this.server.emit(DRAGGING_INFOS, Array.from(this.draggingInfos.values()));
     }
   }
