@@ -11,6 +11,10 @@ export class CreateChatDto {
 
   @IsString()
   @IsNotEmpty()
+  color: string; // 익명 사용자 색상
+
+  @IsString()
+  @IsNotEmpty()
   message: string; // 채팅 내용
 
   @IsOptional()
